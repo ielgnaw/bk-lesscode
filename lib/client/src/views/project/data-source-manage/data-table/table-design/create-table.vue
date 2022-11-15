@@ -24,6 +24,13 @@
                             width: '400'
                         }"
                     ></i>
+                    <import-table
+                        class="import-table"
+                        title="导入表结构"
+                        tips="1. 如果导入 sql 文件，仅支持解析创建表的语法<br>2. 仅支持系统可创建的字段类型<br>3. 系统内置字段会默认添加且不可修改<br>4. 导入文件后会解析并更新表字段配置"
+                        :handle-import="importTable"
+                        @downloadTemplate="downloadStructTemplate"
+                    />
                 </h5>
                 <field-table ref="fieldTableRef" :data.sync="tableStatus.data" @change="changeEdit(true)"></field-table>
             </section>
@@ -52,7 +59,8 @@
         BASE_COLUMNS,
         DataParse,
         StructJsonParser,
-        StructSqlParser
+        StructSqlParser,
+        handleImportStruct
     } from 'shared/data-source'
     import {
         messageSuccess,
@@ -61,19 +69,24 @@
     import {
         bkInfoBox
     } from 'bk-magic-vue'
+    import router from '@/router'
+    import store from '@/store'
     import renderHeader from '../common/header'
     import fieldTable from '../common/field-table'
     import infoTable from '../common/info-table.vue'
     import confirmDialog from '../common/confirm-dialog.vue'
-    import router from '@/router'
-    import store from '@/store'
+    import importTable from '../common/import.vue'
+    import {
+        downloadStructTemplate
+    } from '../common/use-download-demo'
 
     export default defineComponent({
         components: {
             renderHeader,
             fieldTable,
             infoTable,
-            confirmDialog
+            confirmDialog,
+            importTable
         },
 
         beforeRouteLeave (to, from, next) {
@@ -178,6 +191,22 @@
                 }
             }
 
+            const importTable = ({ data, type }) => {
+                return new Promise((resolve, reject) => {
+                    try {
+                        const [tableInfo] = handleImportStruct([data], type)
+                        // 过滤掉基础字段设置，使用系统内置
+                        tableStatus.data = [
+                            ...BASE_COLUMNS,
+                            ...tableInfo.columns.filter(column => !BASE_COLUMNS.find(baseColumn => baseColumn.name === column.name))
+                        ]
+                        resolve('已解析文件并更新字段配置')
+                    } catch (error) {
+                        reject(error)
+                    }
+                })
+            }
+
             return {
                 hasEdit,
                 sql,
@@ -189,7 +218,9 @@
                 changeEdit,
                 goBack,
                 submit,
-                confirmSubmit
+                confirmSubmit,
+                downloadStructTemplate,
+                importTable
             }
         }
     })
@@ -221,6 +252,11 @@
             line-height: 19px;
             font-size: 14px;
             margin: 0 0 12px;
+        }
+        .import-table {
+            font-weight: normal;
+            display: inline-block;
+            margin-left: 20px;
         }
     }
 </style>

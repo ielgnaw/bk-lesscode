@@ -10,11 +10,19 @@
                 @click="bulkDelete"
             >批量删除</bk-button>
             <export-data
+                class="mr10"
                 title="导出数据"
                 :disable-partial-selection="dataStatus.selectRows.length <= 0"
                 :disabled="dataStatus.pagination.count <= 0"
                 @download="exportDatas"
-            ></export-data>
+            />
+            <import-data
+                class="import-data"
+                title="导入数据"
+                tips="如果导入 sql 文件，仅支持解析插入数据的语法"
+                :handle-import="importData"
+                @downloadTemplate="handleDownloadTemplate"
+            />
         </section>
 
         <bk-table
@@ -166,13 +174,19 @@
         DataParse,
         DataJsonParser,
         DataSqlParser,
-        generateExportDatas
+        generateExportDatas,
+        handleImportData
     } from 'shared/data-source'
     import {
         downloadFile
     } from '@/common/util.js'
     import exportData from '../common/export.vue'
     import editObject from '@/components/edit-object.vue'
+    import importData from '../common/import.vue'
+    import {
+        downloadDataTemplate
+    } from '../common/use-download-demo'
+
     import DayJSUtcPlugin from 'dayjs/plugin/utc'
     dayjs.extend(DayJSUtcPlugin)
 
@@ -213,7 +227,8 @@
     export default defineComponent({
         components: {
             exportData,
-            editObject
+            editObject,
+            importData
         },
 
         props: {
@@ -387,29 +402,44 @@
 
             const confirmSubmitData = () => {
                 formRef.value.validate().then(() => {
-                    // 入库前根据浏览器时间转换时区
-                    const dateTimeColumns = activeTable.value.columns?.filter((column) => (column.type === 'datetime'))
-                    dateTimeColumns.forEach((dateTimeColumn) => {
-                        formStatus.editForm[dateTimeColumn.name] = dayjs(formStatus.editForm[dateTimeColumn.name])
+                    formStatus.isSaving = true
+                    updateDB(
+                        activeTable.value.tableName,
+                        [formStatus.editForm],
+                        formStatus.dataParse
+                    )
+                        .catch((error) => {
+                            messageError(error.message || error)
+                        })
+                        .finally(() => {
+                            formStatus.isSaving = false
+                        })
+                }).catch((validator) => {
+                    messageError(validator.content || validator)
+                })
+            }
+
+            // 基于 json 更新 db
+            const updateDB = (tableName, list, dataParse) => {
+                // 入库前根据浏览器时间转换时区
+                const dateTimeColumns = activeTable.value.columns?.filter((column) => (column.type === 'datetime'))
+                dateTimeColumns.forEach((dateTimeColumn) => {
+                    list.forEach((form) => {
+                        form[dateTimeColumn.name] = dayjs(form[dateTimeColumn.name])
                             .utcOffset(0)
                             .format('YYYY-MM-DD HH:mm:ss')
                     })
+                })
 
-                    const data = [{ tableName: activeTable.value.tableName, list: [formStatus.editForm] }]
-                    const dataJsonParser = new DataJsonParser(data)
-                    const dataSqlParser = new DataSqlParser()
-                    const sql = formStatus.dataParse.set(dataJsonParser).export(dataSqlParser)
-                    formStatus.isSaving = true
-                    return modifyOnlineDb(sql).then(() => {
-                        closeForm()
-                        getDataList()
-                    }).catch((error) => {
-                        messageError(error.message || error)
-                    }).finally(() => {
-                        formStatus.isSaving = false
-                    })
-                }).catch((validator) => {
-                    messageError(validator.content || validator)
+                const data = [{ tableName, list }]
+                const dataJsonParser = new DataJsonParser(data)
+                const dataSqlParser = new DataSqlParser()
+                const sql = dataParse.set(dataJsonParser).export(dataSqlParser)
+
+                return modifyOnlineDb(sql).then((res) => {
+                    closeForm()
+                    getDataList()
+                    return res
                 })
             }
 
@@ -468,6 +498,47 @@
                 }
             }
 
+            const importData = ({ data, type }) => {
+                return new Promise((resolve, reject) => {
+                    try {
+                        const [list] = handleImportData([data], type)
+                        // 去除 id，由 DB 自增长
+                        const filterList = list.map((item) => {
+                            const { id, ...rest } = item
+                            return rest
+                        })
+                        updateDB(activeTable.value.tableName, filterList, new DataParse())
+                            .then((res) => {
+                                const affectedRows = res.reduce((acc, cur) => {
+                                    acc += cur.affectedRows
+                                    return acc
+                                }, 0)
+                                resolve(`解析到${affectedRows}条数据，已导入`)
+                            })
+                            .catch(reject)
+                    } catch (error) {
+                        reject(error)
+                    }
+                })
+            }
+
+            const handleDownloadTemplate = (type) => {
+                // 基于当前选择的表构建示例数据
+                const demoData = activeTable.value.columns.reduce((acc, cur) => {
+                    // 时间类型做特殊处理
+                    acc[cur.name] = cur.default === 'CURRENT_TIMESTAMP' ? '' : cur.default
+                    return acc
+                }, {})
+                // 下载示例
+                downloadDataTemplate(
+                    type,
+                    {
+                        tableName: 'demo_data',
+                        list: [demoData]
+                    }
+                )
+            }
+
             watch(
                 [environment, activeTable],
                 () => {
@@ -502,7 +573,9 @@
                 confirmSubmitData,
                 bulkDelete,
                 deleteData,
-                exportDatas
+                exportDatas,
+                handleDownloadTemplate,
+                importData
             }
         }
     })

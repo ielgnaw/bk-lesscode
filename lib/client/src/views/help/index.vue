@@ -83,13 +83,13 @@
                                 level: 1,
                                 id: 'grid'
                             }, {
-                                name: '布局模板',
-                                level: 1,
-                                id: 'layout-guide'
-                            }, {
                                 name: '自由布局',
                                 level: 1,
                                 id: 'freeLayout'
+                            }, {
+                                name: '导航布局',
+                                level: 1,
+                                id: 'layout-guide'
                             }]
                         }, {
                             name: '页面画布',
@@ -151,6 +151,10 @@
         },
         mounted () {
             this.adjustAnchor()
+
+            setTimeout(() => {
+                document.querySelector('.nav-list .nav-child.nav-active')?.scrollIntoView()
+            }, 0)
         },
         methods: {
             adjustAnchor () {
@@ -251,5 +255,5 @@
             }
         }
     }
-    
+
 </style>

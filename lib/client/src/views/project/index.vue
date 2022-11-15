@@ -106,7 +106,7 @@
             <div class="page-top">
                 <h3 class="current">{{ currentPage }}</h3>
                 <div class="version-selector" v-if="isShowProjectVersionSelector">
-                    当前版本：
+                    应用当前版本：
                     <project-version-selector :bordered="false" :popover-width="200" v-model="projectVersionId" @change="handleChangeProjectVersion" />
                 </div>
             </div>
@@ -254,7 +254,7 @@
                                 }
                             },
                             {
-                                title: '布局模板实例',
+                                title: '导航布局管理',
                                 url: 'layout',
                                 iamAction: 'develop_app',
                                 permission: false,
@@ -535,8 +535,8 @@
         --breadcrumb-height: 52px;
         --aside-folded-width: 60px;
         min-width: 1280px;
-        height: calc(100vh - 68px);
-        margin-top: 64px;
+        height: calc(100vh - 52px);
+        margin-top: 52px;
 
         &.aside-folded:not(.aside-hover) {
             .aside {
