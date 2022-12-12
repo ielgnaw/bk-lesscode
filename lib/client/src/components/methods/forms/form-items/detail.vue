@@ -16,7 +16,7 @@
                     <i
                         class="bk-icon icon-info ml5"
                         v-if="temp.info"
-                        v-bk-tooltips="{ content: temp.info }"
+                        v-bk-tooltips="{ content: temp.info, allowHtml: true }"
                     ></i>
                 </bk-radio-button>
             </bk-radio-group>
@@ -50,6 +50,7 @@
                 ></choose-api>
             </bk-form-item>
             <bk-form-item
+                ref="funcApiUrl"
                 label="请求地址"
                 property="funcApiUrl"
                 error-display-type="normal"
@@ -274,6 +275,10 @@
                     apiQuery,
                     apiBody
                 })
+                // 选择 api 以后，会对地址赋值，这时候需要进行一次校验（组件库blur未检验）
+                if (api.url) {
+                    this.$nextTick(this.$refs.funcApiUrl.validate)
+                }
             },
 
             getRemoteResponse () {
@@ -326,7 +331,7 @@
 
             getParamRule (label) {
                 return {
-                    validator: (val) => (val.length <= 0 || val.every(x => /^[A-Za-z_]+$/.test(x))),
+                    validator: (val) => (val.length <= 0 || val.every(x => /^[A-Za-z]+$/.test(x))),
                     message: `${label}由大小写英文字母组成`,
                     trigger: 'blur'
                 }
