@@ -22,7 +22,7 @@
                                             <i v-if="layout.layoutType === 'MOBILE'" class="bk-drag-icon bk-drag-mobilephone"> </i>
                                             <i v-else class="bk-drag-icon bk-drag-pc"> </i>
                                         </span>
-                                        <div class="name" :title="layout.showName">{{layout.showName}}</div>
+                                        <div class="name" v-bk-tooltips="{ content: layout.showName, disabled: !(layout.showName && layout.showName.length > 16) }">{{layout.showName}}</div>
                                     </div>
                                     <div class="stat" :title="layout.routePath">
                                         路由: {{layout.routePath}}
@@ -30,7 +30,7 @@
                                 </div>
                                 <div class="col">
                                     <div class="operate-icons">
-                                        <i title="预览" v-if="(layout.type !== 'empty' && (layout.type && !layout.type.startsWith('mobile')))" class="bk-icon icon-eye click-icon" @click="handlePreview(layout)"></i>
+                                        <i title="预览" v-if="(layout.type !== 'empty' && (layout.type && layout.type !== 'mobile-empty'))" class="bk-icon icon-eye click-icon" @click="handlePreview(layout)"></i>
                                         <bk-dropdown-menu :ref="`moreActionDropdown${layout.id}`">
                                             <span slot="dropdown-trigger" class="more-menu-trigger">
                                                 <i class="bk-drag-icon bk-drag-more-dot"></i>
