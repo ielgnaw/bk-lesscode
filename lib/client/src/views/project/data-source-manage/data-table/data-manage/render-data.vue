@@ -21,19 +21,19 @@
                 class="import-data"
                 :title="$t('导入数据')"
                 :tips="$t('如果导入 sql 文件，仅支持解析插入数据的语法')"
-                :uploadKey="dataImportOperationType"
+                :upload-key="dataImportOperationType"
                 :parse-import="parseImport"
                 :handle-import="handleImport"
                 @downloadTemplate="handleDownloadTemplate"
             >
                 <template v-slot:tips="slotProps">
                     <template v-if="slotProps.fileType === DATA_FILE_TYPE.SQL">
-                        支持INSERT、UPDATE、DELETE三种操作，时间类型的值需要转成0时区，
+                        {{$t('支持INSERT、UPDATE、DELETE三种操作，时间类型的值需要转成0时区，')}}
                     </template>
                 </template>
                 <template v-slot="slotProps">
                     <template v-if="slotProps.fileType === DATA_FILE_TYPE.XLSX">
-                        <h5 class="import-title">操作类型</h5>
+                        <h5 class="import-title">{{$t('操作类型')}}</h5>
                         <bk-radio-group
                             v-model="dataImportOperationType"
                             class="import-content"
@@ -48,7 +48,7 @@
                                         'import-tips': true,
                                         checked: dataImportOperationType === item.ID
                                     }"
-                                    v-bk-tooltips="{ content: item.TIPS }"
+                                    v-bk-tooltips="{ content: item.TIPS, maxWidth: 400 }"
                                 >{{ item.NAME }}</span>
                             </bk-radio-button>
                         </bk-radio-group>
@@ -121,7 +121,7 @@
                     ref="formRef"
                     form-type="vertical"
                     :model="formStatus.editForm"
-                    :label-width="120"
+                    :label-width="300"
                 >
                     <lc-form-item
                         v-for="column in activeTable.columns.filter(column => column.name !== 'id')"
@@ -171,7 +171,7 @@
                             :placeholder="$t('请输入字符串')"
                         ></bk-input>
                     </lc-form-item>
-                    <lc-form-item>
+                    <lc-form-item style="margin-top: 32px;">
                         <bk-button
                             theme="primary"
                             class="mr5"
@@ -302,7 +302,7 @@
                 size: 'small'
             })
             const downloadType = ref('')
-            const dataImportOperationType = ref(DATA_IMPORT_OPERATION_TYPE.ALL_INSERT.ID)
+            const dataImportOperationType = ref(DATA_IMPORT_OPERATION_TYPE().ALL_INSERT.ID)
             const userInfo = store.state.user
 
             const calcTableSetting = () => {
@@ -473,18 +473,23 @@
             // 基于 json 更新 db
             const updateDB = (tableName, list, dataParse) => {
                 // 入库前根据浏览器时间转换时区
-                const dateTimeColumns = activeTable.value.columns?.filter((column) => (column.type === 'datetime'))
-                dateTimeColumns.forEach((dateTimeColumn) => {
+                const dateColumns = activeTable.value.columns?.filter((column) => (['date', 'datetime'].includes(column.type)))
+                dateColumns.forEach((dateColumn) => {
                     list.forEach((form) => {
-                        if (isEmpty(form[dateTimeColumn.name])) {
+                        if (isEmpty(form[dateColumn.name])) {
                             return
                         }
-                        if (!dayjs(form[dateTimeColumn.name]).isValid()) {
-                            throw new Error(window.i18n.t('数据是【datetime】类型，但是值【{0}】不符合【datetime】格式', [form[dateTimeColumn.name]]))
-                        } else {
-                            form[dateTimeColumn.name] = dayjs(form[dateTimeColumn.name])
+                        if (!dayjs(form[dateColumn.name]).isValid()) {
+                            throw new Error(window.i18n.t('数据是【{1}】类型，但是值【{0}】不符合【{1}】格式', [form[dateColumn.name], dateColumn.type]))
+                        }
+                        if (dateColumn.type === 'datetime') {
+                            form[dateColumn.name] = dayjs(form[dateColumn.name])
                                 .utcOffset(0)
-                                .format(window.i18n.t('YYYY-MM-DD HH:mm:ss'))
+                                .format('YYYY-MM-DD HH:mm:ss')
+                        }
+                        if (dateColumn.type === 'date') {
+                            form[dateColumn.name] = dayjs(form[dateColumn.name])
+                                .format('YYYY-MM-DD')
                         }
                     })
                 })
@@ -495,6 +500,7 @@
                 const sql = dataParse.set(dataJsonParser).export(dataSqlParser)
 
                 return modifyOnlineDb(sql).then((res) => {
+                    window.leaveConfirm = false
                     close()
                     getDataList()
                     return res
@@ -537,7 +543,7 @@
             }
 
             const exportAllDatas = (fileType) => {
-                window.open(`/api/data-source/exportDatas/projectId/${projectId}/fileType/${fileType}/tableName/${activeTable.value.tableName}/environment/${environment.value.key}`)
+                window.open(`/api/data-source/exportDatas/projectId/${projectId}/fileType/${fileType}/tableName/${activeTable.value.tableName}/environment/${environment.value.key}?x-timezone-offset=${new Date().getTimezoneOffset()}`)
             }
 
             const exportSelectDatas = (fileType) => {
@@ -603,6 +609,7 @@
                 // sql 导入则直接执行 sql 语法
                 if (fileType === DATA_FILE_TYPE.SQL) {
                     return modifyOnlineDb(data.content).then((results) => {
+                        window.leaveConfirm = false
                         close()
                         getDataList()
                         handleImportSuccessMessage(results)
@@ -626,7 +633,7 @@
                         rest.createUser = userInfo.username
                     }
                     // 新增导入和有唯一性约束的情况下，导入不需要id字段
-                    if (dataImportOperationType.value === DATA_IMPORT_OPERATION_TYPE.ALL_INSERT.ID
+                    if (dataImportOperationType.value === DATA_IMPORT_OPERATION_TYPE().ALL_INSERT.ID
                         || activeTable.value.columns.some(column => column.unique)
                     ) {
                         delete rest.id
@@ -709,7 +716,7 @@
 
             return {
                 DATA_FILE_TYPE,
-                DATA_IMPORT_OPERATION_TYPE,
+                DATA_IMPORT_OPERATION_TYPE: DATA_IMPORT_OPERATION_TYPE(),
                 formRef,
                 dataStatus,
                 formStatus,

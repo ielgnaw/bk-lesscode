@@ -23,7 +23,7 @@
                                 $style['path'],
                                 { [$style['editing']]: layoutEditState.group === group.layoutId }
                             ]">
-                                <div :class="$style['path-name']" v-if="layoutEditState.group !== group.layoutId" :title="getDisplayLayoutPath(group.layoutPath)">{{getDisplayLayoutPath(group.layoutPath)}}</div>
+                                <div :class="$style['path-name']" v-if="layoutEditState.group !== group.layoutId" v-tooltips="getDisplayLayoutPath(group.layoutPath)">{{getDisplayLayoutPath(group.layoutPath)}}</div>
                                 <div v-else
                                     :class="[
                                         $style['edit-form'],
@@ -39,7 +39,7 @@
                                             :placeholder="$t('请输入路由名称，回车结束')"
                                         />
                                         <i class="bk-icon icon-exclamation-circle-shape tips-icon"
-                                            v-bk-tooltips="editState.error === 1 ? $t('请检查路径正确性') : $t('需由数字、字母、下划线、中划线(-)、冒号(:)或反斜杠(/)组成')"></i>
+                                            v-bk-tooltips="{ content: editState.error === 1 ? $t('请检查路径正确性') : $t('需由数字、字母、下划线、中划线(-)、冒号(:)或反斜杠(/)组成'), maxWidth: 400 }"></i>
                                     </div>
                                     <div :class="$style['buttons']">
                                         <bk-button text size="small" theme="primary"
@@ -82,7 +82,7 @@
                                     { [$style['editing']]: editState.route === route }
                                 ]">
                                     <div :class="$style['path-name']">
-                                        <span v-if="editState.route !== route" :title="route.path">{{route.path | routeShow}}</span>
+                                        <span v-if="editState.route !== route" v-bk-tooltips="{ content: route.path , disabled: !( route.path && route.path.length > 26) }">{{route.path | routeShow}}</span>
                                         <div
                                             :class="[
                                                 $style['edit-form'],
@@ -99,9 +99,12 @@
                                                     :placeholder="$t('请输入路由名称，回车结束')"
                                                 />
                                                 <i class="bk-icon icon-exclamation-circle-shape tips-icon"
-                                                    v-bk-tooltips="editState.error === 1 ?
+                                                    v-bk-tooltips="{ content: editState.error === 1 ?
                                                         $t('请检查路径正确性') :
-                                                        (editState.error === 2 ? $t('根路由请直接在父级绑定') : $t('需由数字、字母、下划线、中划线(-)、冒号(:)或反斜杠(/)组成'))"></i>
+                                                        (editState.error === 2 ? $t('根路由请直接在父级绑定') : $t('需由数字、字母、下划线、中划线(-)、冒号(:)或反斜杠(/)组成')),
+                                                        maxWidth: 400 }
+                                                    ">
+                                                </i>
                                             </div>
                                             <div :class="$style['buttons']">
                                                 <bk-button text size="small" theme="primary"
@@ -220,6 +223,7 @@
         },
         computed: {
             ...mapGetters('projectVersion', { versionId: 'currentVersionId' }),
+            ...mapGetters('project', ['projectDetail']),
             projectId () {
                 return Number(this.$route.params.projectId)
             },
@@ -586,7 +590,7 @@
                 }
             },
             getDisplayLayoutPath (path) {
-                return this.type === 'MOBILE' && path.startsWith('/mobile') ? path.replace('/mobile', '') : path
+                return this.type === 'MOBILE' && path.includes('/mobile/') ? path.replace('/mobile', '') : path
             },
             getBindDisplayValue (route) {
                 const { pageId, pageName, redirect, path } = route
@@ -631,7 +635,7 @@
                 })
             },
             handlePreview (group) {
-                window.open(`/preview-template/project/${this.projectId}/${group.layoutId}?type=nav-template`, '_blank')
+                window.open(`/preview-template/project/${this.projectId}/${group.layoutId}?type=nav-template&framework=${this.projectDetail.framework}`, '_blank')
             }
         }
     }
@@ -678,10 +682,6 @@
         position: relative;
         height: 36px;
         line-height: 36px;
-
-        & + .route-group {
-            margin-left: 66px;
-          }
 
         &:hover {
              background: #E1ECFF;

@@ -70,14 +70,22 @@
                 <bk-table-column
                     :label="$t('table_初始类型')"
                     show-overflow-tooltip
-                    width="120">
+                    width="100">
                     <template slot-scope="props">
                         <span>{{ getVariableTypeText(props.row) }}</span>
                     </template>
                 </bk-table-column>
                 <bk-table-column
+                    :label="$t('table_生效范围')"
+                    show-overflow-tooltip
+                    width="100">
+                    <template slot-scope="props">
+                        <span>{{ getEffectiveRangeText(props.row) }}</span>
+                    </template>
+                </bk-table-column>
+                <bk-table-column
                     :label="$t('默认值')"
-                    width="220">
+                    width="180">
                     <template slot-scope="props">
                         <span
                             v-for="(val, key) in getVariableDefaultValue(props.row)"
@@ -284,6 +292,17 @@
                 return VARIABLE_TYPE[variableType].NAME
             },
             /**
+             * @desc 生效范围展示文本
+             * @returns { String }
+             */
+            getEffectiveRangeText ({ effectiveRange }) {
+                const rangeMap = {
+                    0: '本应用',
+                    1: '本页面'
+                }
+                return rangeMap[effectiveRange]
+            },
+            /**
              * @desc 变量列表行样式
              * @param { Boolean } name
              * @returns { Boolean }
@@ -348,7 +367,7 @@
                     if (defaultValueType === VARIABLE_VALUE_TYPE.SAME) {
                         value = defaultValue.all
                     } else if (defaultValueType === VARIABLE_VALUE_TYPE.DIFFERENT) {
-                        value = defaultValue.stag
+                        value = defaultValue.preview
                     }
                     if ([VARIABLE_TYPE.ARRAY.VAL, VARIABLE_TYPE.OBJECT.VAL].includes(valueType)) {
                         value = JSON.parse(value)
