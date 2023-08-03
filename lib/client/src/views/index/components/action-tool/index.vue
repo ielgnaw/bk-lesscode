@@ -3,9 +3,10 @@
         <save-as-template v-if="iamNoResourcesPerm[$IAM_ACTION.manage_template[0]]" />
         <clear-canvas />
         <code-and-json />
+        <show-function />
+        <show-variable />
         <quick-operation />
         <canvas-guide />
-        <ai v-if="isAiAvailable" />
     </div>
 </template>
 <script>
@@ -14,22 +15,23 @@
     import SaveAsTemplate from './components/save-as-template'
     import ClearCanvas from './components/clear-canvas'
     import CodeAndJson from './components/code-and-json'
+    import ShowFunction from './components/show-function'
+    import ShowVariable from './components/show-variable'
     import QuickOperation from './components/quick-operation'
     import CanvasGuide from './components/canvas-guide'
-    import Ai from './components/ai.vue'
 
     export default {
         components: {
             SaveAsTemplate,
             ClearCanvas,
             CodeAndJson,
+            ShowFunction,
+            ShowVariable,
             QuickOperation,
-            CanvasGuide,
-            Ai
+            CanvasGuide
         },
         computed: {
-            ...mapGetters(['iamNoResourcesPerm']),
-            ...mapGetters('ai', ['isAiAvailable'])
+            ...mapGetters(['iamNoResourcesPerm'])
         }
     }
 </script>
