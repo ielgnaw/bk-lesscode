@@ -68,12 +68,10 @@
         },
         data () {
             return {
+                applyText: window.i18n?.t('去申请')  || '去申请',
+                appliedText: window.i18n?.t('已申请') || '已申请',
                 isAppleFlag: true
             }
-        },
-        created () {
-            this.applyText = window.i18n?.t('去申请') || '去申请'
-            this.appliedText =  window.i18n?.t('已申请') || '已申请'
         },
         methods: {
             /**
@@ -103,7 +101,7 @@
         justify-content: center;
         align-items: flex-start;
         width: 100%;
-        min-height: calc(100vh - 100px);
+        min-height: calc(100vh - 120px);
         padding-top: 100px;
         .apply-permission-page {
             .page-main {

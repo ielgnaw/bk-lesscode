@@ -104,7 +104,8 @@
             const {
                 componentId,
                 material,
-                renderDirectives
+                renderDirectives,
+                renderProps
             } = this.currentComponentNode
 
             this.id = camelize(componentId)
@@ -125,6 +126,9 @@
                     // text类型也绑定string类型变量
                     if (propConfig[directiveConfig.prop].type === 'text') {
                         propConfigType = 'string'
+                    }
+                    if (typeof propConfig[directiveConfig.prop].type === 'function') {
+                        propConfigType = propConfig[directiveConfig.prop].type(renderProps)
                     }
                     // 解析对应 prop 配置的值类型、默认值
                     const valueTypeInclude = Array.isArray(propConfigType) ? propConfigType : [propConfigType]
@@ -332,7 +336,8 @@
                     format,
                     renderValue,
                     code,
-                    dataSourceType
+                    dataSourceType,
+                    thirdPartDBName
                 } = variableSelectData
 
                 const directiveKey = this.genDirectiveKey(directive)
@@ -345,7 +350,8 @@
                         format,
                         code,
                         renderValue,
-                        dataSourceType
+                        dataSourceType,
+                        thirdPartDBName
                     }
                 })
                 this.triggleUpdate()

@@ -27,6 +27,8 @@
                 v-if="showOperationColumn"
                 label="操作"
                 width="120"
+                type="action"
+                :index="9999"
             >
                 <template #default="prop">
                     <bk-button
@@ -265,7 +267,8 @@
             paginationType: String,
             dataValueType: String,
             bkDataSourceType: String,
-            showOperationColumn: Boolean
+            showOperationColumn: Boolean,
+            thirdPartDBName: String
         },
 
         data () {
@@ -285,10 +288,10 @@
                 },
                 renderPagination: {
                     'show-total-count': true,
-                    'count': 3,
+                    count: 3,
                     'show-limit': true,
-                    'limit': 10,
-                    'current': 1
+                    limit: 10,
+                    current: 1
                 },
                 renderData: [],
                 isLoading: false,
@@ -366,7 +369,7 @@
                 this.editData.isLoading = true
                 this
                     .$http
-                    .get(`/data-source/user/tableName/${this.tableName}/columns`)
+                    .get(`/data-source/user/tableName/${this.tableName}/columns${this.thirdPartDBName ? `/${this.thirdPartDBName}` : ''}`)
                     .then((res) => {
                         this.editData.columns = res.data || []
                         this.editData.columns.forEach((column) => {
@@ -395,7 +398,7 @@
                 this.deleteData.isloading = true
                 return this
                     .$http
-                    .delete(`/data-source/user/tableName/${this.tableName}?id=${this.deleteData.form.id}`)
+                    .delete(`/data-source/user/tableName/${this.tableName}${this.thirdPartDBName ? `/${this.thirdPartDBName}` : ''}?id=${this.deleteData.form.id}`)
                     .then(() => {
                         this.getTableDataFromApi()
                         this.handleCloseDialog()
@@ -424,7 +427,7 @@
                         this.editData.isSaving = true
                         return this
                             .$http
-                            .put(`/data-source/user/tableName/${this.tableName}`, this.editData.form)
+                            .put(`/data-source/user/tableName/${this.tableName}${this.thirdPartDBName ? `/${this.thirdPartDBName}` : ''}`, this.editData.form)
                             .then(() => {
                                 this.getTableDataFromApi()
                                 this.handleCloseForm()
@@ -460,7 +463,7 @@
                 this
                     .$http
                     .get(
-                        `/data-source/user/tableName/${this.tableName}`,
+                        `/data-source/user/tableName/${this.tableName}${this.thirdPartDBName ? `/${this.thirdPartDBName}` : ''}`,
                         {
                             params: {
                                 page: this.renderPagination?.current,

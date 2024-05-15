@@ -57,6 +57,8 @@
     import ModifierSlots from './slots'
     import ModifierGird from './gird'
     import ModifierForm from './form'
+    import ModifierFormContainer from './form-container'
+    import ModifierDataManageContainer from './data-manage-container'
     import ModifierTab from './tab'
     import ModifierProps from './props'
     import ModifierEvents from './events'
@@ -93,7 +95,7 @@
                 // 当前属性面板的编辑组件
                 const comMap = {
                     styles: [ModifierAlign, ModifierStyles],
-                    props: [ModifierGird, H5Page, ModifierForm, ModifierTab, ModifierSlots, ModifierProps],
+                    props: [ModifierGird, H5Page, ModifierForm, ModifierFormContainer, ModifierDataManageContainer, ModifierTab, ModifierSlots, ModifierProps],
                     events: [ModifierEvents],
                     directives: [ModifierDirectives],
                     perms: [ModifierPerms]
@@ -187,6 +189,8 @@
     @import "@/css/variable";
 
     .material-modifier {
+        height: calc(100% - 42px);
+        position: relative;
         .modifier-tab-container {
             height: 49px;
             background: #fff;
@@ -206,7 +210,7 @@
         }
         .material-modifier-container {
             @mixin scroller;
-            height: calc(100vh - 104px - 42px - 84px);
+            height: calc(100% - 50px - 48px);
             padding-bottom: 20px;
             overflow-y: auto;
             overflow-x: hidden;
